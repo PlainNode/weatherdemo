@@ -1,0 +1,57 @@
+#app{
+    width: 400px;
+    height: 900px;
+    background-color: #76a8e4;
+    border-radius: 8px;
+    text-align: center;
+    background-image: url("./bgi.jpg");
+    background-size: cover;
+    /* align-content: end; */
+}
+#echarts{
+    width: 100%;
+    height: 500px;
+    margin-top:50px;
+}
+.icons {
+    display: grid;
+    height: 25%;
+    align-content: end;
+    grid-template-columns: repeat(3, 1fr); /* 3 列，每列等宽 */
+    grid-template-rows: repeat(2, 100px); /* 2 行，每行 100px 高 */
+    /* gap: 20px; */
+    width: 100%;
+    /* max-width: 600px; 限制最大宽度，方便观察 */
+    margin-bottom: 20px;
+    /* margin: 0 30px; */
+  }
+.icon{
+    display: flex;
+    width: 80px;
+    height: 80px;
+    /* background-color: #689de7; */
+}
+.tem{
+background-size: cover
+}
+.win{
+    background-size: cover;
+    
+}
+.humidity{
+    
+    background-size: cover
+
+}
+.uv{
+    background-size: cover
+
+}
+.visibility{
+    background-size: cover
+
+}
+.pressure{
+    background-size: cover
+
+}

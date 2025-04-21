@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>天气预报</title>
+  <link rel="stylesheet" href="./tdtcss.css">
+  <style>
+    #echarts {
+      margin-left:2%;
+      width: 96%;
+      height: 400px; /* 确保有一个固定的高度 */
+      background-color: #7fa4f4;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <p>weather</p>
+    <p>这是一个测试</p>
+    <p>这也是一个测试</p>
+    <input type="text" v-model="city" @keyup.enter="blura">
+    <div id="echarts"></div>
+    <div class="icons">
+      <div class="icon tem">温度：<br>{{ datas.tema }}°C</div><!-- 温度 -->
+      <div class="icon win">风力：<br>{{ datas.win }}</div><!-- 风力 -->
+      <div class="icon humidity">湿度：<br>{{ datas.humidity }}</div><!-- 湿度 -->
+      <div class="icon uv">紫外线：<br>{{ datas.uv }}</div><!-- 紫外线 -->
+      <div class="icon visibility">能见度：<br>{{ datas.visibility }}</div><!-- 能见度 -->
+      <div class="icon pressure">气压：<br>{{ datas.pressure }}</div><!-- 气压 -->
+    </div>
+  </div>
+
+  <script src="./lib/vue.global.js"></script>
+  <script src="./lib/axios.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+  <script type="module">
+    const { createApp, ref, reactive, onMounted, onUnmounted } = Vue;
+
+    createApp({
+      setup() {
+        let city = ref('');
+        let datas = reactive({
+          tema: '',
+          win: '',
+          humidity: '',
+          uv: '',
+          visibility: '',
+          pressure: ''
+        });
+
+        let chart = ref(null);
+        let myChart = ref(null);
+
+        const initChart = () => {
+          if (!chart.value) {
+            console.warn('Chart container is not found!');
+            return;
+          }
+
+          // 初始化 ECharts 实例
+          myChart.value = echarts.init(chart.value);
+
+          // 指定图表的配置项和数据
+          const option = {
+            title: {
+              text: '未来一周气温走势'
+            },
+            tooltip: {
+              trigger: 'axis'
+            },
+            xAxis: {
+              type: 'category',
+              data: [] // 初始数据为空
+            },
+            yAxis: {
+              type: 'value'
+            },
+            series: [
+              {
+                name: '温度',
+                type: 'line',
+                data: [] // 初始数据为空
+              }
+            ]
+          };
+
+          // 使用刚指定的配置项和数据显示图表
+          myChart.value.setOption(option);
+
+          // 监听窗口大小变化并重新调整图表大小
+          const resizeHandler = () => {
+            myChart.value.resize();
+          };
+          window.addEventListener('resize', resizeHandler);
+
+          // 返回清理函数以移除事件监听器
+          onUnmounted(() => {
+            window.removeEventListener('resize', resizeHandler);
+            myChart.value.dispose();
+          });
+        };
+
+        const blura = () => {
+          console.log('blur');
+          if (!city.value) {
+            console.warn('请先输入城市名称');
+            return;
+          }
+          axios.get(`http://gfeljm.tianqiapi.com/api?unescape=1&version=v9&appid=58765598&appsecret=kGtWgb6A&city=${city.value}`)
+            .then(res => {
+              console.log(res.data);
+              if (res.data.data && res.data.data.length > 0) {
+                datas.tema = res.data.data[0].tem;
+                datas.win = res.data.data[0].win;
+                datas.humidity = res.data.data[0].humidity;
+                datas.uv = res.data.data[0].uvIndex;
+                datas.visibility = res.data.data[0].visibility;
+                datas.pressure = res.data.data[0].pressure;
+
+                // 更新 xAxis 数据
+                const xAxisData = res.data.data.map(day => day.date.substring(5, 10)); // 假设 day 对象中有一个 date 属性
+                // 更新 series 数据
+                const seriesData = res.data.data.map(day => day.tem);
+
+                // 更新图表数据
+                const newOption = {
+                  xAxis: {
+                    data: xAxisData
+                  },
+                  series: [
+                    {
+                      name: '温度',
+                      type: 'line',
+                      data: seriesData
+                    }
+                  ]
+                };
+                myChart.value.setOption(newOption);
+              } else {
+                console.warn('未找到该城市的天气数据');
+              }
+            })
+            .catch(error => {
+              console.error('Error fetching data:', error);
+            });
+        };
+
+        onMounted(() => {
+          chart.value = document.getElementById('echarts');
+          initChart();
+        });
+
+        return {
+          city,
+          blura,
+          datas
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
